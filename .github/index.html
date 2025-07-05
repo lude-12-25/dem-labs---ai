@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DemLabs AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #00b4db, #0083b0);
+      text-align: center;
+      padding: 20px;
+    }
+    #chat-box {
+       width: 100%;
+  max-width: 800px;
+  height: 450px;
+  margin: 20px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.85); /* subtle white overlay */
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .message {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5%;
+      max-width: 80%;
+      white-space: pre-wrap;
+    }
+    .user { background: #dcf8c6; text-align: right; margin-left: auto; border-radius: 20px;  background: #dcf8c6; /* WhatsApp-style green */
+  color: #000;
+  margin-left: auto;
+  text-align: right;
+  border-bottom-right-radius: 0;}
+    .bot { background: #f1f0f0; margin-right: auto; border-radius: 20px; background: #f1f0f0; /* Light gray or soft lavender */
+  color: #111;
+  margin-right: auto;
+  text-align: left;
+  border-bottom-left-radius: 0;}
+   
+   input#user-input {
+  width: 90%;
+  max-width: 800px;
+  padding: 14px 18px;
+  font-size: 16px;
+  margin-top: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  outline: none;
+  transition: 0.3s ease;
+}
+
+input#user-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0,123,255,0.3);
+}
+
+button {
+  margin-top: 10px;
+  padding: 12px 28px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+    @media (max-width: 600px) {
+      #chat-box {
+        width: 100%;
+        height: 300px;
+      }
+      input, button {
+        width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h2 style="color: linear-gradient(blue, green);">DemLabs AI</h2>
+  <div id="chat-box"></div>
+
+  <input type="text" id="user-input" placeholder="Ask DemLabs..." onkeypress="if(event.key==='Enter'){sendMessage();}">
+  <br>
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const API_KEY = "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";  // Replace with your actual key
+    const API_URL = "https://api.groq.com/openai/v1/chat/completions";
+    const MODEL = "llama3-70b-8192";
+
+    const history = [];
+
+    function appendMessage(sender, text, type) {
+      const box = document.getElementById("chat-box");
+      const div = document.createElement("div");
+      div.className = `message ${type}`;
+      div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const message = input.value.trim();
+      if (!message) return;
+
+      // Show user message
+      appendMessage("You", message, "user");
+      history.push({ role: "user", content: message });
+      input.value = "";
+
+      // Show bot "typing..."
+      appendMessage("DemLabs AI", "Thinking...", "bot");
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: history,
+          temperature: 0.7
+        })
+      });
+
+      const data = await response.json();
+      const botReply = data.choices[0].message.content;
+
+      // Remove "Typing..." and show actual reply
+      const box = document.getElementById("chat-box");
+      const botDivs = box.getElementsByClassName("bot");
+      if (botDivs.length > 0) {
+        botDivs[botDivs.length - 1].innerHTML = `<strong>DemLabs AI:</strong> ${botReply}`;
+      }
+
+      history.push({ role: "assistant", content: botReply });
+    }
+  </script>
+
+</body>
+</html>
